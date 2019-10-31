@@ -1,7 +1,6 @@
 import csvmatch
 import pandas as pd
 
-
 def fuzzy_merge(df1,
           df2,
           on=None,
@@ -12,7 +11,8 @@ def fuzzy_merge(df1,
           keep_right='all',
           method='exact',
           threshold=0.6,
-          **kwargs):
+          training_file=None, #TODO: EITHER ADD A POSITIONAL ARGUMENT FOR THE LIST OF LIST OF TRAINING FILES: [trainingmatches1.csv,trainingmatches2.csv,...]
+          **kwargs):       #TODO: OR, YOU CAN ADD IT AS A KEYWORD ARGUMENT WITH THE REST OF THE OPTIONAL ARGUMENTS.
     """Fuzzy matching between two dataframes
 
     Parameters
@@ -72,11 +72,33 @@ def fuzzy_merge(df1,
     pd.DataFrame
         a DataFrame of matchine rows
     """
+
+    #there is a transformation that happens here to the pandas dataframe thats
+    #passed in... that means that i will probably have to do some transformation
+
     data1 = df1.values.tolist()
     headers1 = list(df1.columns)
 
     data2 = df2.values.tolist()
     headers2 = list(df2.columns)
+
+    #TODO: PREPARE_TRAINING() TAKES IN A FILE NAME AND THEN USES:
+    """
+    deduper.prepare_training(data_d, 150000, .5)
+
+    with open(training_file, 'rb') as f:
+        deduper.prepare_training(data_d, training_file=f)
+        uncertainPairs()
+    """
+
+    #THAT TO DO THE PREPARATION. SO, IF I PASS IN A LIST OF MATCH FILES,
+    #THAT MEANS THAT I NEED TO COLLATE THE MATCHES INTO ONE BIG "MATCH"
+    #FILE. I CAN EITHER CHOOSE TO DO THAT IN HERE, OR OUTSIDE OF THIS
+    #PACKAGE.
+        #TODO: IN THIS COLLATE FUNCTION, I ALSO NEED SOME WAY TO DEAL WITH
+        #MULTIPLE "PAIRS" SO THIS MEANS.. WOULD I JUST PUT IN A PERMUTATION
+        #OF ALL PAIRS... ? (INTEL/INTC) (INTEL/INTC CORP) (INTC CORP/INTC)?
+        #NEED TO LOOK THIS UP. MAYBE ASK DAN THE BEST WAY TO PASS THIS INFO IN
 
     if not isinstance(threshold, list):
         threshold = [threshold]
@@ -119,8 +141,17 @@ def fuzzy_merge(df1,
         method = [method]
 
     output = kwargs.pop('output', output)
+    """
+    so this means that if i dont list what the ouput key is in kwargs...
+    then it will use the output that was created up there. Basically, the
+    idea is that .pop() will look for that key 'output' in kwargs, but if
+    its not there... then it will take the output created up there. So, long
+    story short I dont actually need to know what the code does up there.
 
-    results, keys = csvmatch.run(
+    """
+
+
+    results, keys = csvmatch.run(  #TODO: PUT IN THE TRAINING MATCHES LIST AS AN ARGUMENT HERE:
         data1,
         headers1,
         data2,
@@ -130,6 +161,11 @@ def fuzzy_merge(df1,
         thresholds=threshold,
         output=output,
         methods=method,
+        training_file=None, #pass it in as None first
+        #training_list = [trainingmatches1.csv,trainingmatches2.csv,...]
         **kwargs)
+        #So, the kwargs that is right here.... is directly passed from the beginning of this method. Its not used at all.
+        #no the above statement isn't true. It has some output thing that goes on?
+        #yes it is true, I could pass something else than output into there
 
     return pd.DataFrame(results, columns=keys)
